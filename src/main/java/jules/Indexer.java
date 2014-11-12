@@ -21,6 +21,7 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopScoreDocCollector;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
+import org.apache.lucene.search.similarities.*;
 
 import edu.jhu.nlp.wikipedia.*;
 
@@ -50,7 +51,7 @@ public class Indexer {
             e.printStackTrace();
         }
         // 3. search
-        int hitsPerPage = 3;
+        int hitsPerPage = 50;
         IndexReader reader = null;
 
         try {
@@ -60,6 +61,8 @@ public class Indexer {
         }
 
         IndexSearcher searcher = new IndexSearcher(reader);
+        searcher.setSimilarity(new BM25Similarity((float)2, (float)0.75));
+        
         TopScoreDocCollector collector = TopScoreDocCollector.create(hitsPerPage, true);
         try {
             searcher.search(query, collector);
@@ -84,7 +87,8 @@ public class Indexer {
             print("Score: " + hits[i].score, silent);
             tmpResult.put("Score", Float.toString(hits[i].score));
             for (IndexableField field : d.getFields()) {
-                print(field.name() + ": " + field.stringValue(), silent);
+            	if(field.name().startsWith("title"))
+            		print(field.name() + ": " + field.stringValue(), silent);
                 tmpResult.put(field.name(), field.stringValue());
             }
             print("=========================================================================================", silent);
